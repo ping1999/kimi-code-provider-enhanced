@@ -1,0 +1,6 @@
+node_modules/
+dist/
+artifacts/
+.tmp/
+test-results/
+playwright-report/
