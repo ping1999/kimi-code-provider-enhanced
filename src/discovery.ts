@@ -1,6 +1,6 @@
 import { KpeError } from './errors.ts';
 import { fetchJson, type FetchLike } from './http.ts';
-import { isLoopbackHost } from './storage.ts';
+import { isLoopbackHost, isPrivateIpHost } from './storage.ts';
 
 export const SUPPORTED_DISCOVERY_WIRES = ['openai', 'openai_responses', 'kimi'] as const;
 
@@ -173,11 +173,11 @@ export function buildModelsUrl(baseUrl: string): URL {
     throw new KpeError('PROVIDER_URL_INVALID', '供应商地址不允许包含查询或片段');
   }
   if (url.protocol === 'http:') {
-    if (!isLoopbackHost(url.hostname)) {
-      throw new KpeError('PROVIDER_URL_INVALID', 'HTTP 供应商地址仅限本机回环');
+    if (!isLoopbackHost(url.hostname) && !isPrivateIpHost(url.hostname)) {
+      throw new KpeError('PROVIDER_URL_INVALID', 'HTTP 供应商地址仅限本机或内网 IP');
     }
   } else if (url.protocol !== 'https:') {
-    throw new KpeError('PROVIDER_URL_INVALID', '供应商地址必须为 https（本机可为 http）');
+    throw new KpeError('PROVIDER_URL_INVALID', '供应商地址必须为 https（本机或内网可为 http）');
   }
   let pathname = url.pathname.replace(/\/+$/, '');
   if (!pathname.toLowerCase().endsWith('/models')) pathname = `${pathname}/models`;

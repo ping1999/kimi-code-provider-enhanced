@@ -23,13 +23,32 @@ describe('buildModelsUrl', () => {
     assert.equal(buildModelsUrl(`${BASE}/models`).pathname, '/v1/models');
   });
 
-  it('rejects userinfo, query, fragment and non-loopback http', () => {
+  it('rejects userinfo, query, fragment and non-local http', () => {
     assert.throws(() => buildModelsUrl('http://user:pw@127.0.0.1/v1'), KpeError);
     assert.throws(() => buildModelsUrl('http://127.0.0.1/v1?x=1'), KpeError);
     assert.throws(() => buildModelsUrl('http://127.0.0.1/v1#f'), KpeError);
-    assert.throws(() => buildModelsUrl('http://169.254.1.1/v1'), KpeError);
+    assert.throws(() => buildModelsUrl('http://8.8.8.8/v1'), KpeError);
+    assert.throws(() => buildModelsUrl('http://[::ffff:8.8.8.8]/v1'), KpeError);
+    assert.throws(() => buildModelsUrl('http://nas.local/v1'), KpeError);
     assert.throws(() => buildModelsUrl('ftp://127.0.0.1/v1'), KpeError);
     assert.equal(buildModelsUrl('https://api.example.com/v1').protocol, 'https:');
+  });
+
+  it('allows http on loopback and private network addresses', () => {
+    for (const base of [
+      'http://localhost/v1',
+      'http://192.168.31.237/v1',
+      'http://10.0.0.5/v1',
+      'http://172.16.8.1/v1',
+      'http://169.254.1.1/v1',
+      'http://100.64.1.1/v1',
+      'http://[fd12:3456::1]/v1',
+      'http://[fe80::1]/v1',
+      'http://[::1]/v1',
+      'http://[::ffff:192.168.1.10]/v1',
+    ]) {
+      assert.equal(buildModelsUrl(base).pathname, '/v1/models', base);
+    }
   });
 });
 

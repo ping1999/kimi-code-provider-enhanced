@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { chmod, mkdir, open, readdir, readFile, rename, stat, unlink } from 'node:fs/promises';
+import { BlockList, isIPv4, isIPv6 } from 'node:net';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
@@ -70,6 +71,36 @@ function pidAlive(pid: number): boolean {
 export function isLoopbackHost(host: string): boolean {
   const normalized = host.trim().toLowerCase();
   return normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '::1' || normalized === '[::1]';
+}
+
+const privateIpRanges = new BlockList();
+privateIpRanges.addSubnet('127.0.0.0', 8, 'ipv4');
+privateIpRanges.addSubnet('10.0.0.0', 8, 'ipv4');
+privateIpRanges.addSubnet('172.16.0.0', 12, 'ipv4');
+privateIpRanges.addSubnet('192.168.0.0', 16, 'ipv4');
+privateIpRanges.addSubnet('169.254.0.0', 16, 'ipv4');
+privateIpRanges.addSubnet('100.64.0.0', 10, 'ipv4');
+privateIpRanges.addSubnet('198.18.0.0', 15, 'ipv4');
+privateIpRanges.addAddress('::1', 'ipv6');
+privateIpRanges.addSubnet('fc00::', 7, 'ipv6');
+privateIpRanges.addSubnet('fe80::', 10, 'ipv6');
+
+const IPV4_MAPPED_IPV6 = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/;
+
+export function isPrivateIpHost(host: string): boolean {
+  let normalized = host.trim().toLowerCase();
+  if (normalized.startsWith('[') && normalized.endsWith(']')) {
+    normalized = normalized.slice(1, -1);
+  }
+  if (isIPv4(normalized)) return privateIpRanges.check(normalized, 'ipv4');
+  if (!isIPv6(normalized)) return false;
+  const mapped = IPV4_MAPPED_IPV6.exec(normalized);
+  if (mapped !== null) {
+    const hi = Number.parseInt(mapped[1]!, 16);
+    const lo = Number.parseInt(mapped[2]!, 16);
+    return privateIpRanges.check(`${hi >> 8}.${hi & 0xff}.${lo >> 8}.${lo & 0xff}`, 'ipv4');
+  }
+  return privateIpRanges.check(normalized, 'ipv6');
 }
 
 function decodeInstance(raw: unknown): ServerInstance | undefined {

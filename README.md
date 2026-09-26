@@ -75,6 +75,7 @@ npm run package   # 生成 artifacts/kimi-code-provider-enhanced-<version>.zip
 ## 安全设计
 
 - 不读取、回显或记录 API Key 与 server token；供应商请求只发白名单字段。
+- HTTP 供应商地址仅允许本机回环与内网 IP（10/8、172.16/12、192.168/16、169.254/16、100.64/10、IPv6 ULA/链路本地），公网地址必须使用 HTTPS。
 - Kimi REST API 仅访问本机回环地址，通过 `server/instances` 心跳 + 存活 pid + URL 精确匹配定位实例。
 - `apply_changes` 是唯一写入口：changeId 有 TTL，应用前校验配置未漂移，写入后读回校验。
 - 不自动删除供应商/模型，不修改全局默认模型，不发送真实推理请求探测能力。

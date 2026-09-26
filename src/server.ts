@@ -39,7 +39,7 @@ import type {
 } from './types.ts';
 
 const PLUGIN_NAME = 'kimi-code-provider-enhanced';
-const PLUGIN_VERSION = '0.1.0';
+const PLUGIN_VERSION = '0.1.1';
 const DEFAULT_PAGE_SIZE = 30;
 const MAX_PAGE_SIZE = 100;
 const MAX_SNAPSHOT_MODELS = 10_000;

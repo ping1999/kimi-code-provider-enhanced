@@ -1,6 +1,6 @@
 {
   "name": "kimi-code-provider-enhanced",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "在 WebUI 对话中发现并选择供应商模型，配置思考档位。",
